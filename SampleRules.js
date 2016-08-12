@@ -40,12 +40,12 @@ class Handlers
 
     // The following snippet demonstrates a custom-bound column for the Web Sessions list.
     // See http://fiddler2.com/r/?fiddlercolumns for more info
-    /*
-      public static BindUIColumn("Method", 60)
+    
+     /* public static BindUIColumn("Method", 60)
       function FillMethodColumn(oS: Session): String {
          return oS.RequestMethod;
-      }
-    */
+      }*/
+    
 
     // The following snippet demonstrates how to create a custom tab that shows simple text
     /*
@@ -66,16 +66,31 @@ class Handlers
     */
 
     // You can create a custom menu like so:
-    /*
-    QuickLinkMenu("&Links") 
+    
+    /*QuickLinkMenu("&Links") 
     QuickLinkItem("IE GeoLoc TestDrive", "http://ie.microsoft.com/testdrive/HTML5/Geolocation/Default.html")
     QuickLinkItem("FiddlerCore", "http://fiddler2.com/fiddlercore")
     public static function DoLinksMenu(sText: String, sAction: String)
     {
         Utilities.LaunchHyperlink(sAction);
+    }*/
+        
+    //RL IP RULE - SEND TO TIM
+    RulesString("&RL Server", false) 
+    RulesStringValue(0,"&IP Address", "%CUSTOM%")
+    public static var sIpAddress: String = null;
+    
+        
+    public static BindUIColumn("RLServer IP Address", 150, 5)
+    function CalcMethodCol(oS: Session){
+        if (oS.fullUrl.Contains("callproc105") && sIpAddress != null){
+            return sIpAddress;
+        } else {
+            return String.Empty;
+        }
     }
-    */
-
+    //END
+            
     public static RulesOption("Hide 304s")
     BindPref("fiddlerscript.rules.Hide304s")
     var m_Hide304s: boolean = false;
@@ -150,14 +165,14 @@ class Handlers
 
     static function OnBeforeRequest(oSession: Session) {
         // Sample Rule: Color ASPX requests in RED
-        // if (oSession.uriContains(".aspx")) {	oSession["ui-color"] = "red";	}
+        // if (oSession.uriContains(".aspx")) { oSession["ui-color"] = "red";   }
 
         // Sample Rule: Flag POSTs to fiddler2.com in italics
-        // if (oSession.HostnameIs("www.fiddler2.com") && oSession.HTTPMethodIs("POST")) {	oSession["ui-italic"] = "yup";	}
+        // if (oSession.HostnameIs("www.fiddler2.com") && oSession.HTTPMethodIs("POST")) {  oSession["ui-italic"] = "yup";  }
 
         // Sample Rule: Break requests for URLs containing "/sandbox/"
         // if (oSession.uriContains("/sandbox/")) {
-        //     oSession.oFlags["x-breakrequest"] = "yup";	// Existence of the x-breakrequest flag creates a breakpoint; the "yup" value is unimportant.
+        //     oSession.oFlags["x-breakrequest"] = "yup";   // Existence of the x-breakrequest flag creates a breakpoint; the "yup" value is unimportant.
         // }
 
         if ((null != gs_ReplaceToken) && (oSession.url.indexOf(gs_ReplaceToken)>-1)) {   // Case sensitive
@@ -217,6 +232,8 @@ class Handlers
             oSession.responseCode = 304;
             oSession["ui-backcolor"] = "Lavender";
         }
+        
+
     }
 
     // This function is called immediately after a set of request headers has
@@ -262,6 +279,12 @@ class Handlers
             oSession["x-breakresponse"]="uri";
             oSession.bBufferResponse = true;
         }
+        if (oSession.fullUrl.Contains("callproc105") && oSession.GetRequestBodyAsString().Contains("GetCustomGameServerList"))
+        {
+            oSession.bBufferResponse = true;
+        }
+
+
 
     }
 
@@ -269,6 +292,13 @@ class Handlers
         if (m_Hide304s && oSession.responseCode == 304) {
             oSession["ui-hide"] = "true";
         }
+        //CHANGED - SEND TO TIM
+        if (oSession.fullUrl.Contains("callproc105") && oSession.GetRequestBodyAsString().Contains("GetCustomGameServerList") && sIpAddress != null)
+        
+        {
+            oSession.utilDecodeResponse();
+            oSession.utilSetResponseBody("IP="+sIpAddress+":7778&ServerName=NameDoesNotMatter&PlaylistID=6");
+        }//END
     }
 
 /*
