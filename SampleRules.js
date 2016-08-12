@@ -76,8 +76,9 @@ class Handlers
     }*/
         
     //RL IP RULE - SEND TO TIM
-    RulesString("&RL Server", false) 
+    RulesString("&RL Server", false)
     RulesStringValue(0,"&IP Address", "%CUSTOM%")
+	BindPref("fiddlerscript.rules.sIpAddress")
     public static var sIpAddress: String = null;
     
         
